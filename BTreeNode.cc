@@ -76,8 +76,22 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 RC BTLeafNode::locate(int searchKey, int& eid)
 { 
 	int numKeys = getKeyCount();
+	RC ret;
+	int tempKey;
+	RecordId tempId;
+	for(int i = 0; i < numKeys; i++){
+		ret = readEntry(i, tempKey, tempId);
+		if (ret != 0){
+			break;
+		}
+		else if(tempKey >= searchKey){
+				eid = i;
+				break;
+		}
+	}
 
-	return 0; }
+	return ret; 
+}
 
 /*
  * Read the (key, rid) pair from the eid entry.
