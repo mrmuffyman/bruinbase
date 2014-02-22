@@ -31,10 +31,13 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
  */
 int BTLeafNode::getKeyCount()
 { 
+	char* iter = buffer;
+	while(*iter != 0    &&     sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
+		iter++;
+	}
+	size_t len = sizeof(iter-buffer);
 	//size of buffer - size of pageID
-	int len = sizeof(buffer) - sizeof(PageId);
-	//size of record/key pair
-	int recKeyLen = sizeof(RecordId) + sizeof(int);
+	size_t recKeyLen = sizeof(RecordId) + sizeof(int);
 	int keyCount = len / recKeyLen;
 	return keyCount; 
 }
@@ -103,11 +106,10 @@ RC BTLeafNode::locate(int searchKey, int& eid)
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 { 
 	char* iter = buffer;
-
 	//index points to target address
 	size_t index = eid * (sizeof(RecordId) + sizeof(int));
 	// Check that you're looking at a valid entry
-	if(index >= size(buffer)){
+	if(index >= sizeof(buffer)){
 		return RC_FILE_SEEK_FAILED;
 	}
 
@@ -124,7 +126,10 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
  * @return the PageId of the next sibling node 
  */
 PageId BTLeafNode::getNextNodePtr()
-{ return 0; }
+{ 
+	char* pt = buffer + (sizeof(buffer) - sizeof(PageId));
+	return (* (PageId*) pt);
+}
 
 /*
  * Set the pid of the next slibling node.
@@ -132,7 +137,11 @@ PageId BTLeafNode::getNextNodePtr()
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::setNextNodePtr(PageId pid)
-{ return 0; }
+{ 
+	char* pt = buffer + (sizeof(buffer) - sizeof(PageId));
+	* (PageId*) pt = pid;
+	return 0; 
+}
 
 /*
  * Read the content of the node from the page pid in the PageFile pf.
