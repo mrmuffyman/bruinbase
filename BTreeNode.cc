@@ -47,27 +47,9 @@ int BTLeafNode::getKeyCount()
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
-	//check if node is full
-	size_t len = sizeof(buffer);
-	if(len >= PageFile::PAGE_SIZE){
-		return RC_NODE_FULL;
-	}
-
-	//key and id used for iterating
-	int tempKey;
-	RecordID tempID;
-
-	//buffer with new entry in the right place, because sorting in place is too hard
-	char replacement[Pagefile::PAGE_SIZE];
-	for(int i = 0; i < getKeyCount(); i++){
-		readEntry(i, tempKey, tempID);
-		if (tempKey > key){
-			replacement
-		}
-	}
-
-
-	return 0; }
+	
+	return 0; 
+}
 
 /*
  * Insert the (key, rid) pair to the node
