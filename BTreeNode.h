@@ -12,7 +12,18 @@
 
 #include "RecordFile.h"
 #include "PageFile.h"
+#include <vector>
 
+
+struct keyRec{
+    int key;
+    RecordId record; 
+
+    keyRec(int k, RecordId r){
+        key = k;
+        record = r;
+    }
+};
 /**
  * BTLeafNode: The class representing a B+tree leaf node.
  */
@@ -101,6 +112,8 @@ class BTLeafNode {
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
     */
+    std::vector<keyRec> mymap;
+    PageId nextpage;
     char buffer[PageFile::PAGE_SIZE];
 }; 
 

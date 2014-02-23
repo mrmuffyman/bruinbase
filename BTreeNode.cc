@@ -10,7 +10,22 @@ using namespace std;
  */
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
 { 
+	//read into char buffer
 	RC ret = pf.read(pid, &buffer);
+
+	//populate map with elements in buffer
+	size_t index = sizeof(RecordId) + sizeof(int);
+	char* iter = buffer; 
+	while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
+		RecordId r = * (RecordId*) iter;
+		iter += sizeof(RecordId);
+		int k = * (int*) iter;
+		mymap.push_back(keyRec(k, r));
+		iter += sizeof(int);
+	}
+
+	//set PageId
+	nextpage = * (int*) (buffer + (sizeof(buffer)-sizeof(PageId)));
 	return ret; 
 }
     
@@ -21,9 +36,19 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
-{ 
+{
+	char* curr = buffer;
+	memset(curr, 0, sizeof(buffer));	//clear the buffer
+	for(int i = 0; i < mymap.size(); i++){
+		memcpy(curr, &mymap[i].record, sizeof(RecordId));
+		curr += sizeof(RecordId);
+		memcpy(curr, &mymap[i].key, sizeof(int));
+		curr += sizeof(int);
+	}
+	memcpy(curr, &nextpage, sizeof(nextpage));
 	RC ret = pf.write(pid, &buffer);
-	return ret; }
+	return ret; 
+}
 
 /*
  * Return the number of keys stored in the node.
@@ -31,15 +56,20 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
  */
 int BTLeafNode::getKeyCount()
 { 
+
+	return mymap.size();
+
+/*	Older implementation
+
 	char* iter = buffer;
+	//based on fact that unused characters are padded as 0's
 	while(*iter != 0    &&     sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
 		iter++;
 	}
 	size_t len = sizeof(iter-buffer);
 	//size of buffer - size of pageID
 	size_t recKeyLen = sizeof(RecordId) + sizeof(int);
-	int keyCount = len / recKeyLen;
-	return keyCount; 
+	int keyCount = len / recKeyLen;*/ 
 }
 
 /*
@@ -78,16 +108,15 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
 { 
-	int numKeys = getKeyCount();
 	RC ret;
 	int tempKey;
 	RecordId tempId;
-	for(int i = 0; i < numKeys; i++){
+	for(int i = 0; i < mymap.size(); i++){
 		ret = readEntry(i, tempKey, tempId);
 		if (ret != 0){
 			break;
 		}
-		else if(tempKey >= searchKey){
+		else if(mymap[i].key >= searchKey){
 				eid = i;
 				break;
 		}
@@ -105,6 +134,16 @@ RC BTLeafNode::locate(int searchKey, int& eid)
  */
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 { 
+	if(eid >= mymap.size()){
+		return RC_FILE_SEEK_FAILED;
+	}
+
+	key = mymap[eid].key;
+	rid = mymap[eid].record;
+	return 0;
+
+	/*	Older implementation
+
 	char* iter = buffer;
 	//index points to target address
 	size_t index = eid * (sizeof(RecordId) + sizeof(int));
@@ -117,8 +156,8 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 	iter +=  index;
 	rid = * ((RecordId*) iter);
 	iter += sizeof(RecordId);
-	key = * ((int*) iter);
-	return 0;
+	key = * ((int*) iter);*/
+
 }
 
 /*
@@ -127,8 +166,7 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
  */
 PageId BTLeafNode::getNextNodePtr()
 { 
-	char* pt = buffer + (sizeof(buffer) - sizeof(PageId));
-	return (* (PageId*) pt);
+	return nextpage;
 }
 
 /*
@@ -138,8 +176,7 @@ PageId BTLeafNode::getNextNodePtr()
  */
 RC BTLeafNode::setNextNodePtr(PageId pid)
 { 
-	char* pt = buffer + (sizeof(buffer) - sizeof(PageId));
-	* (PageId*) pt = pid;
+	nextpage = pid;
 	return 0; 
 }
 
