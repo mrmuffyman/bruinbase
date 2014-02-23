@@ -2,6 +2,8 @@
 
 using namespace std;
 
+
+#define MAX_ELEMENTS (sizeof(buffer)-sizeof(PageId))/sizeof(keyRec)
 /*
  * Read the content of the node from the page pid in the PageFile pf.
  * @param pid[IN] the PageId to read
@@ -13,7 +15,7 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 	//read into char buffer
 	RC ret = pf.read(pid, &buffer);
 
-	//populate map with elements in buffer
+	//populate vector with elements in buffer
 	size_t index = sizeof(RecordId) + sizeof(int);
 	char* iter = buffer; 
 	while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
@@ -39,13 +41,16 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
 {
 	char* curr = buffer;
 	memset(curr, 0, sizeof(buffer));	//clear the buffer
+
+	//reconstruct buffer 
 	for(int i = 0; i < mymap.size(); i++){
 		memcpy(curr, &mymap[i].record, sizeof(RecordId));
 		curr += sizeof(RecordId);
 		memcpy(curr, &mymap[i].key, sizeof(int));
 		curr += sizeof(int);
 	}
-	memcpy(curr, &nextpage, sizeof(nextpage));
+	curr = buffer + (sizeof(buffer)-sizeof(PageId));
+	memcpy(curr, &nextpage, sizeof(nextpage));	//add next page
 	RC ret = pf.write(pid, &buffer);
 	return ret; 
 }
@@ -80,7 +85,17 @@ int BTLeafNode::getKeyCount()
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
-	
+	if(mymap.size() == MAX_ELEMENTS){
+			return RC_NODE_FULL;
+	}
+	int eid;
+	if(locate(key, eid) != 0){	//if locate couldn't find a key
+		mymap.push_back(keyRec(key,rid));
+	}
+	else{
+		std::vector<keyRec>::iterator it;
+		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
+	}
 	return 0; 
 }
 
@@ -96,7 +111,22 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
  */
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
-{ return 0; }
+{ 
+	int mid = mymap.size()/2;
+	int count = 0;
+	std::vector<keyRec>::iterator it;
+	for(it = mymap.end(); it != mymap.begin()+mid; it--){
+		sibling.mymap.push_back(*it);
+		count++;
+	}
+	for(int i = 0; i < count; i++){
+		mymap.pop_back();
+	}
+
+	siblingKey = sibling.mymap[0].key;
+
+	return 0; 
+}
 
 /*
  * Find the entry whose key value is larger than or equal to searchKey
