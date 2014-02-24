@@ -44,7 +44,7 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
 	keyRec * curr = buffer;	//clear the buffer
 
 	//reconstruct buffer 
-	memset(curr, 0, sizeof(buffer));
+//	memset(curr, 0, sizeof(buffer));
 	for(int i = 0; i < mymap.size(); i++){
 		memcpy(curr, &mymap[i].record, sizeof(RecordId));
 		curr += sizeof(RecordId);
