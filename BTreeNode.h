@@ -128,7 +128,7 @@ class BTLeafNode {
     */
     std::vector<keyRec> mymap;
     PageId nextpage;
-	keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec) + sizeof(int)];
+	keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec)];
 }; 
 
 
