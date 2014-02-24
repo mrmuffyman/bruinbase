@@ -9,6 +9,7 @@
 
 #include "Bruinbase.h"
 #include "PageFile.h"
+#include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -29,10 +30,10 @@ PageFile::PageFile(const string& filename, char mode)
 {
   fd = -1;
   epid = 0;
-  open(filename.c_str(), mode);
+  pf_open(filename.c_str(), mode);
 }
 
-RC PageFile::open(const string& filename, char mode)
+RC PageFile::pf_open(const string& filename, char mode)
 {
   RC   rc;
   int  oflag;
@@ -55,23 +56,23 @@ RC PageFile::open(const string& filename, char mode)
   }
 
   // open the file
-  fd = ::open(filename.c_str(), oflag, 0644);
+  fd = open(filename.c_str(), oflag, 0644);
   if (fd < 0) { fd = -1; return RC_FILE_OPEN_FAILED; }
 
   // get the size of the file to set the end pid
   rc = ::fstat(fd, &statbuf);
-  if (rc < 0) { ::close(fd); fd = -1; return RC_FILE_OPEN_FAILED; }
+  if (rc < 0) { close(fd); fd = -1; return RC_FILE_OPEN_FAILED; }
   epid = statbuf.st_size / PAGE_SIZE;
 
   return 0;
 }
 
-RC PageFile::close()
+RC PageFile::pf_close()
 {
   if (fd <= 0) return RC_FILE_CLOSE_FAILED;
 
   // close the file
-  if (::close(fd) < 0) return RC_FILE_CLOSE_FAILED;
+  if (close(fd) < 0) return RC_FILE_CLOSE_FAILED;
 
   // evict all cached pages for this file
   for (int i = 0; i < CACHE_COUNT; i++) {
@@ -95,10 +96,10 @@ PageId PageFile::endPid() const
 
 RC PageFile::seek(PageId pid) const
 {
-  return (::lseek(fd, pid * PAGE_SIZE, SEEK_SET) < 0) ? RC_FILE_SEEK_FAILED : 0;
+  return (lseek(fd, pid * PAGE_SIZE, SEEK_SET) < 0) ? RC_FILE_SEEK_FAILED : 0;
 }
 
-RC PageFile::write(PageId pid, const void* buffer)
+RC PageFile::pf_write(PageId pid, const void* buffer)
 {
   RC rc;
   if (pid < 0) return RC_INVALID_PID; 
@@ -107,7 +108,7 @@ RC PageFile::write(PageId pid, const void* buffer)
   if ((rc = seek(pid) < 0)) return rc;
 
   // write the buffer to the disk page
-  if (::write(fd, buffer, PAGE_SIZE) < 0) return RC_FILE_WRITE_FAILED;
+  if (write(fd, buffer, PAGE_SIZE) < 0) return RC_FILE_WRITE_FAILED;
 
   // if the page is in read cache, invalidate it
   for (int i = 0; i < CACHE_COUNT; i++) {
@@ -129,7 +130,7 @@ RC PageFile::write(PageId pid, const void* buffer)
   return 0;
 }
 
-RC PageFile::read(PageId pid, void* buffer) const
+RC PageFile::pf_read(PageId pid, void* buffer) const
 {
   RC rc;
 
@@ -166,7 +167,7 @@ RC PageFile::read(PageId pid, void* buffer) const
   readCache[toEvict].lastAccessed = ++cacheClock;
  
   // read the page to cache first and copy it to the buffer
-  if (::read(fd, readCache[toEvict].buffer, PAGE_SIZE) < 0) {
+  if (read(fd, readCache[toEvict].buffer, PAGE_SIZE) < 0) {
     return RC_FILE_READ_FAILED;
   }
   memcpy(buffer, readCache[toEvict].buffer, PAGE_SIZE);

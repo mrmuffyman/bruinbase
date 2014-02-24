@@ -14,7 +14,7 @@ using namespace std;
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
 { 
 	//read into char buffer
-	RC ret = pf.read(pid, &buffer);
+	RC ret = pf.pf_read(pid, &buffer);
 
 	//populate vector with elements in buffer
 	size_t index = sizeof(RecordId) + sizeof(int);
@@ -53,7 +53,7 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
 	}
 	curr = buffer + (sizeof(buffer)-sizeof(PageId));
 	memcpy(curr, &nextpage, sizeof(nextpage));	//add next page
-	RC ret = pf.write(pid, &buffer);
+	RC ret = pf.pf_write(pid, &buffer);
 	return ret; 
 }
 

@@ -33,13 +33,13 @@ class PageFile {
    * @param mode[IN] 'r' for read, 'w' for write
    * @return error code. 0 if no error
    */
-  RC open(const std::string& filename, char mode);
+  RC pf_open(const std::string& filename, char mode);
 
   /**
    * close the file.
    * @return error code. 0 if no error
    */
-  RC close();
+  RC pf_close();
   
   /**
    * read a disk page into memory buffer.
@@ -47,7 +47,7 @@ class PageFile {
    * @param buffer[OUT] pointer to memory buffer
    * @return error code. 0 if no error
    */
-  RC read(PageId pid, void *buffer) const;
+  RC pf_read(PageId pid, void *buffer) const;
   
   /**
    * write the memory buffer to the disk page.
@@ -57,7 +57,7 @@ class PageFile {
    * @param buffer[IN] the content to write
    * @return error code. 0 if no error
    */
-  RC write(PageId pid, const void *buffer);
+  RC pf_write(PageId pid, const void *buffer);
     
   /**
    * note the +1 part. The last page id in the file is actually endPid()-1.

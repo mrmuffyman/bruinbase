@@ -119,7 +119,7 @@ RC RecordFile::open(const string& filename, char mode)
   char page[PageFile::PAGE_SIZE];
 
   // open the page file
-  if ((rc = pf.open(filename, mode)) < 0) return rc;
+  if ((rc = pf.pf_open(filename, mode)) < 0) return rc;
   
   //
   // in the rest of this function, we set the end record id
@@ -138,10 +138,10 @@ RC RecordFile::open(const string& filename, char mode)
   // obtain # records in the last page to set sid of the end record id.
   // read the last page of the file and get # records in the page.
   // remeber that the id of the last page is endPid()-1 not endPid().
-  if ((rc = pf.read(--erid.pid, page)) < 0) {
+  if ((rc = pf.pf_read(--erid.pid, page)) < 0) {
     // an error occurred during page read
     erid.pid = erid.sid = 0;
-    pf.close();
+    pf.pf_close();
     return rc;
   }
 
@@ -161,7 +161,7 @@ RC RecordFile::close()
   erid.pid = 0;
   erid.sid = 0;
 
-  return pf.close();
+  return pf.pf_close();
 }
 
 RC RecordFile::read(const RecordId& rid, int& key, string& value) const
@@ -175,7 +175,7 @@ RC RecordFile::read(const RecordId& rid, int& key, string& value) const
   if (rid >= erid) return RC_INVALID_RID;
   
   // read the page containing the record
-  if ((rc = pf.read(rid.pid, page)) < 0) return rc;
+  if ((rc = pf.pf_read(rid.pid, page)) < 0) return rc;
 
   // read the record from the slot in the page
   readSlot(page, rid.sid, key, value);
@@ -191,7 +191,7 @@ RC RecordFile::append(int key, const std::string& value, RecordId& rid)
   // unless we are writing to the the first slot of an empty page,
   // we have to read the page first
   if (erid.sid > 0) {
-    if ((rc = pf.read(erid.pid, page)) < 0) return rc;
+    if ((rc = pf.pf_read(erid.pid, page)) < 0) return rc;
   } else {
     // if this is the first slot of an empty page
     // we can simply initialize the page with zeros
@@ -206,7 +206,7 @@ RC RecordFile::append(int key, const std::string& value, RecordId& rid)
   setRecordCount(page, erid.sid + 1);
 
   // write the page to the disk
-  if ((rc = pf.write(erid.pid, page)) < 0) return rc;
+  if ((rc = pf.pf_write(erid.pid, page)) < 0) return rc;
     
   // we need to output the rid of the record slot
   rid = erid;
