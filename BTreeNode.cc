@@ -18,7 +18,8 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 
 	//populate vector with elements in buffer
 	size_t index = sizeof(keyRec);
-	keyRec* iter = buffer; 
+	//keyRec* iter = buffer; 
+	int length = buffer.size();
 	//while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
 	//	RecordId r = * (RecordId*) iter;
 	//	iter += sizeof(RecordId);
@@ -28,7 +29,7 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 	//}
 
 	//set PageId
-	nextpage = * (int*)  (buffer + (sizeof(buffer)-sizeof(PageId)));
+	nextpage = buffer.getLast(); //* (int*)  (buffer + (sizeof(buffer)-sizeof(PageId)));
 	return ret; 
 }
     
@@ -40,16 +41,20 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
 {
-	keyRec* curr = buffer;	//clear the buffer
+	//keyRec* curr = buffer;	//clear the buffer
 
 	//reconstruct buffer 
- 	memset(curr, 0, sizeof(buffer));
+ 	//memset(buffer, 0, sizeof(buffer));
+	buffer.setZero();
 	for(int i = 0; i < mymap.size(); i++){
-		memcpy(curr, &mymap[i], sizeof(keyRec));
-		curr += sizeof(keyRec);
+		buffer.set(i, mymap[i]);
+		//memcpy(curr, &mymap[i], sizeof(keyRec));
+		//curr += sizeof(keyRec);
 	}
-	curr = buffer + (sizeof(buffer)-sizeof(PageId));
-	memcpy(curr, &nextpage, sizeof(nextpage));	//add next page
+	//curr = buffer + (sizeof(buffer)-sizeof(PageId));
+	//Add next page
+	buffer.setLast(nextpage);
+	//memcpy(curr, &nextpage, sizeof(nextpage));	//add next page
 	RC ret = pf.pf_write(pid, &buffer);
 	return ret; 
 }

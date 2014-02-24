@@ -13,23 +13,9 @@
 #include "RecordFile.h"
 #include "PageFile.h"
 #include <vector>
+#include "BTbuff.h"
+#include "keyRec.h"
 
-
-struct keyRec{
-    int key;
-    RecordId record; 
-	keyRec()
-	{
-		key = 0;
-		record.pid = 0;
-		record.sid = 0;
-	}
-    keyRec(int k, RecordId r)
-	{
-        key = k;
-        record = r;
-    }
-};
 
 
 /**
@@ -128,7 +114,7 @@ class BTLeafNode {
     */
     std::vector<keyRec> mymap;
     PageId nextpage;
-	keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec)];
+	BTbuff buffer;
 }; 
 
 
