@@ -12,8 +12,68 @@
 #include "BTreeNode.h"
 #include <iostream>
 
+class BTbuff
+{
+public:
+	/*
+		Public interface:
+		Get -> get element at index
+		Set -> set element at index
+		getLast -> get pageID
+		setLast -> set pageID
+	*/
+	//Get
+	keyRec get(unsigned int index)
+	{
+		if (index >= size())
+		{
+			//Error Handling
+			std::cout << "Index out of range" << std::endl;
+		}
+		return *(keyRec*)(c + index);
+	}
+	void set(unsigned int index, keyRec val)
+	{
+		if (index >= size())
+		{
+			//Error Handling
+			std::cout << "Index out of range" << std::endl;
+		}
+		memcpy((keyRec*)(c + index),&val,sizeof(keyRec));
+	}
+	// Get and set the PageID int at the end
+	int getLast()
+	{ // casting voodoo to interperet last 4 bytes as an integer
+		return *(int*)(c + (PageFile::PAGE_SIZE - sizeof(PageId)));
+	}
+	void setLast(int val)
+	{
+		memcpy(&c[PageFile::PAGE_SIZE - sizeof(int)], &val, sizeof(int));
+	}
+private:
+	// Doesn't use any memory. Returns size leaving enough space for PageID
+	int size()
+	{
+		//Size is given by allocating 4 bytes for the last int and the rest for keyRecs
+		int remainder = PageFile::PAGE_SIZE - sizeof(int);
+		return (int)(remainder / sizeof(keyRec));
+	}
+	char c[PageFile::PAGE_SIZE];
+};
 int main()
 {
+	auto teemo = new BTbuff();
+	auto q = teemo->getLast();
+	teemo->setLast(9999);
+	auto r = teemo->getLast();
+	keyRec t;
+	t.record.pid = 1;
+	t.record.sid = 2;
+	t.key = 3;
+	keyRec u = teemo->get(0);
+	teemo->set(-7, t);
+	auto v = teemo->get(0);
+
   // run the SQL engine taking user commands from standard input (console).
  // SqlEngine::run(stdin);
 	BTLeafNode* node = new BTLeafNode();
