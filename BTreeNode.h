@@ -107,6 +107,8 @@ class BTLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+    void printstats();
+
   private:
    /**
     * The main memory buffer for loading the content of the disk page 
@@ -192,6 +194,8 @@ class BTNonLeafNode {
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
     */
+    std::vector<keyRec> mymap;
+    PageId nextpage;
     char buffer[PageFile::PAGE_SIZE];
 }; 
 

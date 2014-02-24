@@ -1,4 +1,5 @@
 #include "BTreeNode.h"
+#include <iostream>
 
 using namespace std;
 
@@ -28,6 +29,7 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 
 	//set PageId
 	nextpage = * (int*) (buffer + (sizeof(buffer)-sizeof(PageId)));
+	printf("%s\n", buffer);
 	return ret; 
 }
     
@@ -39,10 +41,10 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
 {
-	char* curr = buffer;
-	memset(curr, 0, sizeof(buffer));	//clear the buffer
+	char* curr = buffer;	//clear the buffer
 
 	//reconstruct buffer 
+	memset(curr, 0, sizeof(buffer));
 	for(int i = 0; i < mymap.size(); i++){
 		memcpy(curr, &mymap[i].record, sizeof(RecordId));
 		curr += sizeof(RecordId);
@@ -99,6 +101,12 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	return 0; 
 }
 
+void BTLeafNode::printstats(){
+	for(int i = 0; i < mymap.size(); i++){
+		cout<< mymap[i].key << " " << mymap[i].record.pid << "," << mymap[i].record.sid << "\n";
+	}
+	cout << "nextpage: " << nextpage << "\n";
+}
 /*
  * Insert the (key, rid) pair to the node
  * and split the node half and half with sibling.
@@ -141,7 +149,10 @@ RC BTLeafNode::locate(int searchKey, int& eid)
 	RC ret;
 	int tempKey;
 	RecordId tempId;
-	for(int i = 0; i < mymap.size(); i++){
+	if(mymap.size() == 0){
+		return RC_NO_SUCH_RECORD;
+	}
+	for(int i = 0; i <= mymap.size(); i++){
 		ret = readEntry(i, tempKey, tempId);
 		if (ret != 0){
 			break;
@@ -172,22 +183,6 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 	rid = mymap[eid].record;
 	return 0;
 
-	/*	Older implementation
-
-	char* iter = buffer;
-	//index points to target address
-	size_t index = eid * (sizeof(RecordId) + sizeof(int));
-	// Check that you're looking at a valid entry
-	if(index >= sizeof(buffer)){
-		return RC_FILE_SEEK_FAILED;
-	}
-
-	//extract RecordID and key
-	iter +=  index;
-	rid = * ((RecordId*) iter);
-	iter += sizeof(RecordId);
-	key = * ((int*) iter);*/
-
 }
 
 /*
@@ -217,7 +212,9 @@ RC BTLeafNode::setNextNodePtr(PageId pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
-{ return 0; }
+{ 
+
+	return 0; }
     
 /*
  * Write the content of the node to the page pid in the PageFile pf.
