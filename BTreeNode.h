@@ -18,8 +18,14 @@
 struct keyRec{
     int key;
     RecordId record; 
-
-    keyRec(int k, RecordId r){
+	keyRec()
+	{
+		key = 0;
+		record.pid = 0;
+		record.sid = 0;
+	}
+    keyRec(int k, RecordId r)
+	{
         key = k;
         record = r;
     }
@@ -29,6 +35,10 @@ struct keyRec{
  */
 class BTLeafNode {
   public:
+	  BTLeafNode()
+	  {
+		  //empty constructor for now
+	  }
    /**
     * Insert the (key, rid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
@@ -116,7 +126,7 @@ class BTLeafNode {
     */
     std::vector<keyRec> mymap;
     PageId nextpage;
-    char buffer[PageFile::PAGE_SIZE];
+	keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec)];
 }; 
 
 
@@ -196,7 +206,7 @@ class BTNonLeafNode {
     */
     std::vector<keyRec> mymap;
     PageId nextpage;
-    char buffer[PageFile::PAGE_SIZE];
+    keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec)];
 }; 
 
 #endif /* BTNODE_H */

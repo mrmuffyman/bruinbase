@@ -17,18 +17,18 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 	RC ret = pf.pf_read(pid, &buffer);
 
 	//populate vector with elements in buffer
-	size_t index = sizeof(RecordId) + sizeof(int);
-	char* iter = buffer; 
-	while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
-		RecordId r = * (RecordId*) iter;
-		iter += sizeof(RecordId);
-		int k = * (int*) iter;
-		mymap.push_back(keyRec(k, r));
-		iter += sizeof(int);
-	}
+	size_t index = sizeof(keyRec);
+	keyRec* iter = buffer; 
+	//while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
+	//	RecordId r = * (RecordId*) iter;
+	//	iter += sizeof(RecordId);
+	//	int k = * (int*) iter;
+	//	mymap.push_back(keyRec(k, r));
+	//	iter += sizeof(int);
+	//}
 
 	//set PageId
-	nextpage = * (int*) (buffer + (sizeof(buffer)-sizeof(PageId)));
+	nextpage = * (int*)  (buffer + (sizeof(buffer)-sizeof(PageId)));
 	printf("%s\n", buffer);
 	return ret; 
 }
@@ -41,7 +41,7 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
 {
-	char* curr = buffer;	//clear the buffer
+	keyRec * curr = buffer;	//clear the buffer
 
 	//reconstruct buffer 
 	memset(curr, 0, sizeof(buffer));

@@ -28,8 +28,10 @@ PageFile::PageFile()
 
 PageFile::PageFile(const string& filename, char mode)
 {
+// Initialize
   fd = -1;
   epid = 0;
+  //Set fd and epid with this function
   pf_open(filename.c_str(), mode);
 }
 
@@ -39,7 +41,9 @@ RC PageFile::pf_open(const string& filename, char mode)
   int  oflag;
   struct stat statbuf;
 
-  if (fd > 0) return RC_FILE_OPEN_FAILED;
+  //Not sure how this will ever run
+  if (fd > 0) 
+	  return RC_FILE_OPEN_FAILED;
 
   // set the unix file flag depending on the file mode
   switch (mode) {
@@ -57,11 +61,20 @@ RC PageFile::pf_open(const string& filename, char mode)
 
   // open the file
   fd = open(filename.c_str(), oflag, 0644);
-  if (fd < 0) { fd = -1; return RC_FILE_OPEN_FAILED; }
+  if (fd < 0) 
+  { 
+	  fd = -1; 
+	  return RC_FILE_OPEN_FAILED;
+  }
 
   // get the size of the file to set the end pid
   rc = ::fstat(fd, &statbuf);
-  if (rc < 0) { close(fd); fd = -1; return RC_FILE_OPEN_FAILED; }
+  if (rc < 0) 
+  { 
+	  close(fd); 
+	  fd = -1; 
+	  return RC_FILE_OPEN_FAILED; 
+  }
   epid = statbuf.st_size / PAGE_SIZE;
 
   return 0;

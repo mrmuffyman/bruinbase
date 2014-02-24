@@ -23,9 +23,12 @@ int main()
 	node->setNextNodePtr(1);
 	node->printstats();
 //	node->insert(2,d);
-
-	PageFile* pf = new PageFile("testpage", 'w');
+								//fname      mode
+	PageFile* pf = new PageFile("testpage.test", 'w');
+	PageFile* pf2 = new PageFile("testpage.test", 'w');
 	node->write(0, *pf);
+	node->read(0, *pf);
+
 
 	BTLeafNode* node2 = new BTLeafNode();
 	node2->read(0, *pf);
