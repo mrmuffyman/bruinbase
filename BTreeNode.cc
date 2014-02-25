@@ -306,6 +306,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		if(mymap[i].key > key){
 			mymap.insert(mymap.begin()+i, keyPid(key,pid));
 			inserted = true;
+			break;
 		}
 	}
 	if(!inserted){
@@ -315,17 +316,15 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 	int mid = mymap.size()/2;
 	int count = 0;
 	std::vector<keyPid>::iterator it;
-
-	//iterate to right after the middle
-	for(it = mymap.end(); it != mymap.begin()+mid+1; it--){
-		sibling.mymap.push_back(*it);
-		count++;		//count = number of elements to pop off
+	for(it = mymap.begin() + mymap.size() - 1; it != mymap.begin()+mid; it--){
+		sibling.insert((*it).key, (*it).pid);
+		count++;
 	}
-	//at the end of iteration it points to middle
 	midKey = (*it).key;
-	for(int i = 0; i < count+1; i++){
-		mymap.pop_back(); 	//pop off count elements + 1 (middle element)
+	for(int i = 0; i < count; i++){
+		mymap.pop_back();
 	}
+	mymap.pop_back();
 
 	return 0; 
 }
@@ -367,4 +366,11 @@ RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
 	insert(key, pid1);
 	nextpage = pid2;
 	return 0; 
+}
+
+void BTNonLeafNode::printstats(){
+	for(int i = 0; i < mymap.size(); i++){
+		cout<< mymap[i].key << " " << mymap[i].pid << "\n";
+	}
+	cout << "nextpage: " << nextpage << "\n";
 }

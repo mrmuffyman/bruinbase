@@ -33,12 +33,12 @@ int main()
 	auto f = teemo->get(9);*/
   // run the SQL engine taking user commands from standard input (console).
  // SqlEngine::run(stdin);
+
+//Some LeafNode Testing
 	BTLeafNode* node = new BTLeafNode();
 	RecordId d = {0,0};
 	node->insert(1,d);
 	node->setNextNodePtr(1);
-//	node->printstats();
-//	node->insert(2,d);
 								//fname      mode
 	PageFile* pf = new PageFile("testpage.test", 'w');
 	node->write(0, *pf);
@@ -51,7 +51,20 @@ int main()
 	node->insertAndSplit(4, d, *sibling, siblingKey);
 	node->printstats();
 	sibling->printstats();
-//	node2->printstats();
 
+
+//Some NonLeafNode Testing
+	BTNonLeafNode* nade = new BTNonLeafNode();
+	nade->insert(4,0);
+	nade->insert(1,0);
+	nade->insert(2,0);
+	nade->insert(5,0);
+	PageFile* pf = new PageFile("testpage.test", 'w');
+	nade->write(0, *pf);
+	BTNonLeafNode* gre = new BTNonLeafNode();
+	int midkey;
+	nade->insertAndSplit(3, 0, *gre, midkey);
+	nade-> printstats();
+	gre->printstats();
     return 0;
 }
