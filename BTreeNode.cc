@@ -87,7 +87,6 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 		mymap.push_back(keyRec(key,rid));
 	}
 	else{
-		std::vector<keyRec>::iterator it;
 		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
 	}
 	return 0; 
@@ -112,6 +111,16 @@ void BTLeafNode::printstats(){
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
 { 
+	//code from BTLeafNode::insert, minus checking if buffer is full
+	int eid;
+	if(locate(key, eid) != 0){	//if locate couldn't find a key
+		mymap.push_back(keyRec(key,rid));
+	}
+	else{
+		std::vector<keyRec>::iterator it;
+		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
+	}
+
 	int mid = mymap.size()/2;
 	int count = 0;
 	std::vector<keyRec>::iterator it;
@@ -267,7 +276,6 @@ RC BTNonLeafNode::insert(int key, PageId pid)
 	//if you find a key that's greater than the entry key, insert the entry key right before
 	for(int i = 0; i < mymap.size(); i++){
 		if(mymap[i].key > key){
-			std::vector<keyPid>::iterator it;
 			mymap.insert(mymap.begin()+i, keyPid(key,pid));
 			return 0;	
 		}
@@ -289,6 +297,18 @@ RC BTNonLeafNode::insert(int key, PageId pid)
  */
 RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
 { 
+	//code from insert, minus buffer size check
+	bool inserted = false;
+	for(int i = 0; i < mymap.size(); i++){
+		if(mymap[i].key > key){
+			mymap.insert(mymap.begin()+i, keyPid(key,pid));
+			inserted = true;
+		}
+	}
+	if(!inserted){
+		mymap.push_back(keyPid(key,pid));
+	}
+
 	int mid = mymap.size()/2;
 	int count = 0;
 	std::vector<keyPid>::iterator it;
@@ -299,7 +319,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		count++;		//count = number of elements to pop off
 	}
 	//at the end of iteration it points to middle
-	midkey = *it.key;
+	midKey = (*it).key;
 	for(int i = 0; i < count+1; i++){
 		mymap.pop_back(); 	//pop off count elements + 1 (middle element)
 	}
@@ -340,4 +360,8 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
-{ return 0; }
+{ 
+	mymap.insert(key, pid1);
+	mymap.setLast(pid2);
+	return 0; 
+}
