@@ -38,18 +38,21 @@ int main()
 	node->insert(3,d);
 	node->insert(1,d);
 	node->setNextNodePtr(1);
-	node->printstats();
+//	node->printstats();
 //	node->insert(2,d);
 								//fname      mode
 	PageFile* pf = new PageFile("testpage.test", 'w');
-	PageFile* pf2 = new PageFile("booty.test", 'r');
 	node->write(0, *pf);
-
-
 
 	BTLeafNode* node2 = new BTLeafNode();
 	node2->read(0, *pf);
-	node2->printstats();
+
+	int siblingKey;
+	BTLeafNode* sibling = new BTLeafNode();
+	node->insertAndSplit(4, d, *sibling, siblingKey);
+	node->printstats();
+	sibling->printstats();
+//	node2->printstats();
 
     return 0;
 }

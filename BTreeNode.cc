@@ -124,8 +124,8 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	int mid = mymap.size()/2;
 	int count = 0;
 	std::vector<keyRec>::iterator it;
-	for(it = mymap.end(); it != mymap.begin()+mid; it--){
-		sibling.mymap.push_back(*it);
+	for(it = mymap.begin() + mymap.size() - 1; it != mymap.begin()+mid; it--){
+		(sibling.mymap).push_back(*it);
 		count++;
 	}
 	for(int i = 0; i < count; i++){
