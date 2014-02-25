@@ -361,7 +361,7 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
  */
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
 { 
-	mymap.insert(key, pid1);
-	mymap.setLast(pid2);
+	insert(key, pid1);
+	nextpage = pid2;
 	return 0; 
 }
