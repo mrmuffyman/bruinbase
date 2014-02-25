@@ -1,8 +1,8 @@
 #pragma once
 #include "RecordFile.h"
 struct keyRec{
-	int key;
 	RecordId record;
+	int key;
 	keyRec()
 	{
 		key = 0;

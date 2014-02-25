@@ -15,7 +15,7 @@
 
 int main()
 {
-	auto teemo = new BTbuff();
+/*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);
 	auto r = teemo->getLast();
@@ -30,7 +30,7 @@ int main()
 	teemo->set(0, c);
 	teemo->set(9, c);
 	auto e = teemo->get(0);
-	auto f = teemo->get(9);
+	auto f = teemo->get(9);*/
   // run the SQL engine taking user commands from standard input (console).
  // SqlEngine::run(stdin);
 	BTLeafNode* node = new BTLeafNode();
@@ -42,9 +42,9 @@ int main()
 //	node->insert(2,d);
 								//fname      mode
 	PageFile* pf = new PageFile("testpage.test", 'w');
-	PageFile* pf2 = new PageFile("testpage.test", 'w');
+	PageFile* pf2 = new PageFile("booty.test", 'r');
 	node->write(0, *pf);
-	node->read(0, *pf);
+
 
 
 	BTLeafNode* node2 = new BTLeafNode();

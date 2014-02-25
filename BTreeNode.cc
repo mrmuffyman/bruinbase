@@ -4,7 +4,6 @@
 using namespace std;
 
 
-#define MAX_ELEMENTS (sizeof(buffer)-sizeof(PageId))/sizeof(keyRec)
 /*
  * Read the content of the node from the page pid in the PageFile pf.
  * @param pid[IN] the PageId to read
@@ -20,14 +19,16 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 	size_t index = sizeof(keyRec);
 	//keyRec* iter = buffer; 
 	int length = buffer.size();
-	//while(*iter != 0 && sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
-	//	RecordId r = * (RecordId*) iter;
-	//	iter += sizeof(RecordId);
-	//	int k = * (int*) iter;
-	//	mymap.push_back(keyRec(k, r));
-	//	iter += sizeof(int);
-	//}
-
+	for(int i = 0; i < length; i++)
+	{ 
+		keyRec t = buffer.get(i);
+		if(t.key == 0){
+			break;
+		}
+		else{
+			mymap.push_back(t);
+		}
+	} 
 	//set PageId
 	nextpage = buffer.getLast(); //* (int*)  (buffer + (sizeof(buffer)-sizeof(PageId)));
 	return ret; 
@@ -68,17 +69,6 @@ int BTLeafNode::getKeyCount()
 
 	return mymap.size();
 
-/*	Older implementation
-
-	char* iter = buffer;
-	//based on fact that unused characters are padded as 0's
-	while(*iter != 0    &&     sizeof(iter-buffer) <= sizeof(buffer) - sizeof(PageId)){
-		iter++;
-	}
-	size_t len = sizeof(iter-buffer);
-	//size of buffer - size of pageID
-	size_t recKeyLen = sizeof(RecordId) + sizeof(int);
-	int keyCount = len / recKeyLen;*/ 
 }
 
 /*
@@ -89,7 +79,7 @@ int BTLeafNode::getKeyCount()
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
-	if(mymap.size() == MAX_ELEMENTS){
+	if(mymap.size() == buffer.size()){
 			return RC_NODE_FULL;
 	}
 	int eid;
@@ -215,8 +205,23 @@ RC BTLeafNode::setNextNodePtr(PageId pid)
  */
 RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
 { 
+	RC ret = pf.pf_read(pid, &buffer);
+	int length = buffer.size();
+	for(int i = 0; i < length; i++)
+	{ 
+		keyPid t = buffer.get(i);
+		if(t.key == 0){	//this is an assumption to keep in mind
+			break;
+		}
+		else{
+			mymap.push_back(t);
+		}
+	} 
 
-	return 0; }
+	//set PageId
+	nextpage = buffer.getLast();
+	return ret; 
+}
     
 /*
  * Write the content of the node to the page pid in the PageFile pf.
@@ -225,14 +230,25 @@ RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::write(PageId pid, PageFile& pf)
-{ return 0; }
+{
+	buffer.setZero();
+	for(int i = 0; i < mymap.size(); i++){
+		buffer.set(i, mymap[i]);
+	}
+	buffer.setLast(nextpage);
+	RC ret = pf.pf_write(pid, &buffer);
+	return ret; 
+}
 
 /*
  * Return the number of keys stored in the node.
  * @return the number of keys in the node
  */
 int BTNonLeafNode::getKeyCount()
-{ return 0; }
+{ 
+
+	return mymap.size(); 
+}
 
 
 /*
@@ -242,7 +258,24 @@ int BTNonLeafNode::getKeyCount()
  * @return 0 if successful. Return an error code if the node is full.
  */
 RC BTNonLeafNode::insert(int key, PageId pid)
-{ return 0; }
+{ 
+	//check if node is full
+	if(mymap.size() == buffer.size()){
+			return RC_NODE_FULL;
+	}
+
+	//if you find a key that's greater than the entry key, insert the entry key right before
+	for(int i = 0; i < mymap.size(); i++){
+		if(mymap[i].key > key){
+			std::vector<keyPid>::iterator it;
+			mymap.insert(mymap.begin()+i, keyPid(key,pid));
+			return 0;	
+		}
+	}
+	//else, entry key is the greatest, so push it to the back
+	mymap.push_back(keyPid(key,pid));
+	return 0; 
+}
 
 /*
  * Insert the (key, pid) pair to the node
@@ -255,7 +288,24 @@ RC BTNonLeafNode::insert(int key, PageId pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
-{ return 0; }
+{ 
+	int mid = mymap.size()/2;
+	int count = 0;
+	std::vector<keyPid>::iterator it;
+
+	//iterate to right after the middle
+	for(it = mymap.end(); it != mymap.begin()+mid+1; it--){
+		sibling.mymap.push_back(*it);
+		count++;		//count = number of elements to pop off
+	}
+	//at the end of iteration it points to middle
+	midkey = *it.key;
+	for(int i = 0; i < count+1; i++){
+		mymap.pop_back(); 	//pop off count elements + 1 (middle element)
+	}
+
+	return 0; 
+}
 
 /*
  * Given the searchKey, find the child-node pointer to follow and
@@ -265,7 +315,22 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
-{ return 0; }
+{ 	
+	//if node is empty
+	if(mymap.size() == 0){
+		return RC_NO_SUCH_RECORD;
+	}
+	//once a key is found greater than the search key, return its pointer
+	for(int i = 0; i < buffer.size(); i++){
+		if(mymap[i].key > searchKey){
+			pid = mymap[i].pid;
+			return 0;
+		}
+	}
+	//else the search key is greater than all keys, so return the rightmost poitner
+	pid = nextpage;
+	return 0; 
+}
 
 /*
  * Initialize the root node with (pid1, key, pid2).

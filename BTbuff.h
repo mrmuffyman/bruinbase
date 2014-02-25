@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include "keyRec.h"
+template <class T>
 class BTbuff
 {
 public:
@@ -12,17 +13,17 @@ public:
 	setLast -> set pageID
 	*/
 	//Get
-	keyRec get(unsigned int index)
+	T get(unsigned int index)
 	{
 		if (index >= size())
 		{
 			//Error Handling
 			std::cout << "Index out of range" << std::endl;
-			return *(keyRec*) c;
+			return *(T*) c;
 		}
-		return *(keyRec*)(c + index * sizeof(keyRec));
+		return *(T*)(c + index * sizeof(T));
 	}
-	void set(unsigned int index, keyRec val)
+	void set(unsigned int index, T val)
 	{
 		if (index >= size())
 		{
@@ -30,7 +31,7 @@ public:
 			std::cout << "Index out of range" << std::endl;
 			return;
 		}
-		memcpy((keyRec*)(c + index * sizeof(keyRec) ), &val, sizeof(keyRec));
+		memcpy((T*)(c + index * sizeof(T) ), &val, sizeof(T));
 	}
 	// Get and set the PageID int at the end
 	int getLast()
@@ -46,7 +47,7 @@ public:
 	{
 		//Size is given by allocating 4 bytes for the last int and the rest for keyRecs
 		int remainder = PageFile::PAGE_SIZE - sizeof(int);
-		return (int)(remainder / sizeof(keyRec));
+		return (int)(remainder / sizeof(T));
 	}
 	void setZero()
 	{

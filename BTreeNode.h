@@ -16,6 +16,20 @@
 #include "BTbuff.h"
 #include "keyRec.h"
 
+struct keyPid{
+    PageId pid;
+    int key;
+    keyPid()
+    {
+        key = 0;
+        pid = 0;
+    }
+    keyPid(int k, PageId p)
+    {
+        key = k;
+        pid = p;
+    }
+};
 
 
 /**
@@ -114,7 +128,7 @@ class BTLeafNode {
     */
     std::vector<keyRec> mymap;
     PageId nextpage;
-	BTbuff buffer;
+	BTbuff<keyRec> buffer;
 }; 
 
 
@@ -192,9 +206,9 @@ class BTNonLeafNode {
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
     */
-    std::vector<keyRec> mymap;
+    std::vector<keyPid> mymap;
     PageId nextpage;
-    keyRec buffer[PageFile::PAGE_SIZE / sizeof(keyRec)];
+    BTbuff<keyPid> buffer;
 }; 
 
 #endif /* BTNODE_H */
