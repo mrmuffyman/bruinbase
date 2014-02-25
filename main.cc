@@ -35,7 +35,6 @@ int main()
  // SqlEngine::run(stdin);
 	BTLeafNode* node = new BTLeafNode();
 	RecordId d = {0,0};
-	node->insert(3,d);
 	node->insert(1,d);
 	node->setNextNodePtr(1);
 //	node->printstats();

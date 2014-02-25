@@ -1,6 +1,6 @@
 #include "BTreeNode.h"
 #include <iostream>
-
+#include "math.h"
 using namespace std;
 
 
@@ -112,6 +112,9 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
                               BTLeafNode& sibling, int& siblingKey)
 { 
 	//code from BTLeafNode::insert, minus checking if buffer is full
+	if(mymap.size() == 0){
+		return RC_INVALID_CURSOR;
+	}
 	int eid;
 	if(locate(key, eid) != 0){	//if locate couldn't find a key
 		mymap.push_back(keyRec(key,rid));
@@ -121,11 +124,11 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
 	}
 
-	int mid = mymap.size()/2;
+	int mid = ceil(mymap.size()/2.0) - 1;
 	int count = 0;
 	std::vector<keyRec>::iterator it;
 	for(it = mymap.begin() + mymap.size() - 1; it != mymap.begin()+mid; it--){
-		(sibling.mymap).push_back(*it);
+		sibling.insert((*it).key, (*it).record);
 		count++;
 	}
 	for(int i = 0; i < count; i++){
