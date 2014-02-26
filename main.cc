@@ -59,8 +59,8 @@ int main()
 	nade->insert(1,0);
 	nade->insert(2,0);
 	nade->insert(5,0);
-	PageFile* pf = new PageFile("testpage.test", 'w');
-	nade->write(0, *pf);
+	PageFile* pfnonleaf = new PageFile("testpage.test", 'w');
+	nade->write(0, *pfnonleaf);
 	BTNonLeafNode* gre = new BTNonLeafNode();
 	int midkey;
 	nade->insertAndSplit(3, 0, *gre, midkey);

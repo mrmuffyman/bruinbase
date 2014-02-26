@@ -11,7 +11,7 @@ using namespace std;
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
-{ 
+{
 	//read into char buffer
 	RC ret = pf.pf_read(pid, &buffer);
 
@@ -19,21 +19,21 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 	size_t index = sizeof(keyRec);
 	//keyRec* iter = buffer; 
 	int length = buffer.size();
-	for(int i = 0; i < length; i++)
-	{ 
+	for (int i = 0; i < length; i++)
+	{
 		keyRec t = buffer.get(i);
-		if(t.key == 0){
+		if (t.key == 0){
 			break;
 		}
 		else{
 			mymap.push_back(t);
 		}
-	} 
+	}
 	//set PageId
 	nextpage = buffer.getLast(); //* (int*)  (buffer + (sizeof(buffer)-sizeof(PageId)));
-	return ret; 
+	return ret;
 }
-    
+
 /*
  * Write the content of the node to the page pid in the PageFile pf.
  * @param pid[IN] the PageId to write to
@@ -45,9 +45,9 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
 	//keyRec* curr = buffer;	//clear the buffer
 
 	//reconstruct buffer 
- 	//memset(buffer, 0, sizeof(buffer));
+	//memset(buffer, 0, sizeof(buffer));
 	buffer.setZero();
-	for(int i = 0; i < mymap.size(); i++){
+	for (int i = 0; i < mymap.size(); i++){
 		buffer.set(i, mymap[i]);
 		//memcpy(curr, &mymap[i], sizeof(keyRec));
 		//curr += sizeof(keyRec);
@@ -57,7 +57,7 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
 	buffer.setLast(nextpage);
 	//memcpy(curr, &nextpage, sizeof(nextpage));	//add next page
 	RC ret = pf.pf_write(pid, &buffer);
-	return ret; 
+	return ret;
 }
 
 /*
@@ -65,7 +65,7 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
  * @return the number of keys in the node
  */
 int BTLeafNode::getKeyCount()
-{ 
+{
 
 	return mymap.size();
 
@@ -78,23 +78,23 @@ int BTLeafNode::getKeyCount()
  * @return 0 if successful. Return an error code if the node is full.
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
-{ 
-	if(mymap.size() == buffer.size()){
-			return RC_NODE_FULL;
+{
+	if (mymap.size() == buffer.size()){
+		return RC_NODE_FULL;
 	}
 	int eid;
-	if(locate(key, eid) != 0){	//if locate couldn't find a key
-		mymap.push_back(keyRec(key,rid));
+	if (locate(key, eid) != 0){	//if locate couldn't find a key
+		mymap.push_back(keyRec(key, rid));
 	}
 	else{
-		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
+		mymap.insert(mymap.begin() + eid, keyRec(key, rid));
 	}
-	return 0; 
+	return 0;
 }
 
 void BTLeafNode::printstats(){
-	for(int i = 0; i < mymap.size(); i++){
-		cout<< mymap[i].key << " " << mymap[i].record.pid << "," << mymap[i].record.sid << "\n";
+	for (int i = 0; i < mymap.size(); i++){
+		cout << mymap[i].key << " " << mymap[i].record.pid << "," << mymap[i].record.sid << "\n";
 	}
 	cout << "nextpage: " << nextpage << "\n";
 }
@@ -108,36 +108,36 @@ void BTLeafNode::printstats(){
  * @param siblingKey[OUT] the first key in the sibling node after split.
  * @return 0 if successful. Return an error code if there is an error.
  */
-RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
-                              BTLeafNode& sibling, int& siblingKey)
-{ 
+RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
+	BTLeafNode& sibling, int& siblingKey)
+{
 	//code from BTLeafNode::insert, minus checking if buffer is full
-	if(mymap.size() == 0){
+	if (mymap.size() == 0){
 		return RC_INVALID_CURSOR;
 	}
 	int eid;
-	if(locate(key, eid) != 0){	//if locate couldn't find a key
-		mymap.push_back(keyRec(key,rid));
+	if (locate(key, eid) != 0){	//if locate couldn't find a key
+		mymap.push_back(keyRec(key, rid));
 	}
 	else{
 		std::vector<keyRec>::iterator it;
-		mymap.insert(mymap.begin()+eid, keyRec(key,rid));	
+		mymap.insert(mymap.begin() + eid, keyRec(key, rid));
 	}
 
-	int mid = ceil(mymap.size()/2.0) - 1;
+	int mid = ceil(mymap.size() / 2.0) - 1;
 	int count = 0;
 	std::vector<keyRec>::iterator it;
-	for(it = mymap.begin() + mymap.size() - 1; it != mymap.begin()+mid; it--){
+	for (it = mymap.begin() + mymap.size() - 1; it != mymap.begin() + mid; it--){
 		sibling.insert((*it).key, (*it).record);
 		count++;
 	}
-	for(int i = 0; i < count; i++){
+	for (int i = 0; i < count; i++){
 		mymap.pop_back();
 	}
 
 	siblingKey = sibling.mymap[0].key;
 
-	return 0; 
+	return 0;
 }
 
 /*
@@ -149,25 +149,30 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
-{ 
+{
 	RC ret;
 	int tempKey;
 	RecordId tempId;
-	if(mymap.size() == 0){
+	// Empty maps cannot contain any records
+	if (mymap.size() == 0)
+	{
 		return RC_NO_SUCH_RECORD;
 	}
-	for(int i = 0; i <= mymap.size(); i++){
+	for (int i = 0; ; i++)
+	{
 		ret = readEntry(i, tempKey, tempId);
-		if (ret != 0){
-			break;
+		// Non zero denotes a failure, specifically that i is too large
+		if (ret)
+		{
+			return ret;
 		}
-		else if(mymap[i].key >= searchKey){
-				eid = i;
-				break;
+		// If we find a key larger than search key, return
+		else if (mymap[i].key >= searchKey)
+		{
+			eid = i;
+			return ret;
 		}
 	}
-
-	return ret; 
 }
 
 /*
@@ -178,35 +183,35 @@ RC BTLeafNode::locate(int searchKey, int& eid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
-{ 
-	if(eid >= mymap.size()){
+{
+	if (eid >= mymap.size())
+	{
 		return RC_FILE_SEEK_FAILED;
 	}
 
 	key = mymap[eid].key;
 	rid = mymap[eid].record;
 	return 0;
-
 }
 
 /*
  * Return the pid of the next slibling node.
- * @return the PageId of the next sibling node 
+ * @return the PageId of the next sibling node
  */
 PageId BTLeafNode::getNextNodePtr()
-{ 
+{
 	return nextpage;
 }
 
 /*
  * Set the pid of the next slibling node.
- * @param pid[IN] the PageId of the next sibling node 
+ * @param pid[IN] the PageId of the next sibling node
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::setNextNodePtr(PageId pid)
-{ 
+{
 	nextpage = pid;
-	return 0; 
+	return 0;
 }
 
 /*
@@ -216,25 +221,25 @@ RC BTLeafNode::setNextNodePtr(PageId pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
-{ 
+{
 	RC ret = pf.pf_read(pid, &buffer);
 	int length = buffer.size();
-	for(int i = 0; i < length; i++)
-	{ 
+	for (int i = 0; i < length; i++)
+	{
 		keyPid t = buffer.get(i);
-		if(t.key == 0){	//this is an assumption to keep in mind
+		if (t.key == 0){	//this is an assumption to keep in mind
 			break;
 		}
 		else{
 			mymap.push_back(t);
 		}
-	} 
+	}
 
 	//set PageId
 	nextpage = buffer.getLast();
-	return ret; 
+	return ret;
 }
-    
+
 /*
  * Write the content of the node to the page pid in the PageFile pf.
  * @param pid[IN] the PageId to write to
@@ -244,12 +249,12 @@ RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
 RC BTNonLeafNode::write(PageId pid, PageFile& pf)
 {
 	buffer.setZero();
-	for(int i = 0; i < mymap.size(); i++){
+	for (int i = 0; i < mymap.size(); i++){
 		buffer.set(i, mymap[i]);
 	}
 	buffer.setLast(nextpage);
 	RC ret = pf.pf_write(pid, &buffer);
-	return ret; 
+	return ret;
 }
 
 /*
@@ -257,9 +262,9 @@ RC BTNonLeafNode::write(PageId pid, PageFile& pf)
  * @return the number of keys in the node
  */
 int BTNonLeafNode::getKeyCount()
-{ 
+{
 
-	return mymap.size(); 
+	return mymap.size();
 }
 
 
@@ -270,22 +275,22 @@ int BTNonLeafNode::getKeyCount()
  * @return 0 if successful. Return an error code if the node is full.
  */
 RC BTNonLeafNode::insert(int key, PageId pid)
-{ 
+{
 	//check if node is full
-	if(mymap.size() == buffer.size()){
-			return RC_NODE_FULL;
+	if (mymap.size() == buffer.size()){
+		return RC_NODE_FULL;
 	}
 
 	//if you find a key that's greater than the entry key, insert the entry key right before
-	for(int i = 0; i < mymap.size(); i++){
-		if(mymap[i].key > key){
-			mymap.insert(mymap.begin()+i, keyPid(key,pid));
-			return 0;	
+	for (int i = 0; i < mymap.size(); i++){
+		if (mymap[i].key > key){
+			mymap.insert(mymap.begin() + i, keyPid(key, pid));
+			return 0;
 		}
 	}
 	//else, entry key is the greatest, so push it to the back
-	mymap.push_back(keyPid(key,pid));
-	return 0; 
+	mymap.push_back(keyPid(key, pid));
+	return 0;
 }
 
 /*
@@ -299,34 +304,34 @@ RC BTNonLeafNode::insert(int key, PageId pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
-{ 
+{
 	//code from insert, minus buffer size check
 	bool inserted = false;
-	for(int i = 0; i < mymap.size(); i++){
-		if(mymap[i].key > key){
-			mymap.insert(mymap.begin()+i, keyPid(key,pid));
+	for (int i = 0; i < mymap.size(); i++){
+		if (mymap[i].key > key){
+			mymap.insert(mymap.begin() + i, keyPid(key, pid));
 			inserted = true;
 			break;
 		}
 	}
-	if(!inserted){
-		mymap.push_back(keyPid(key,pid));
+	if (!inserted){
+		mymap.push_back(keyPid(key, pid));
 	}
 
-	int mid = mymap.size()/2;
+	int mid = mymap.size() / 2;
 	int count = 0;
 	std::vector<keyPid>::iterator it;
-	for(it = mymap.begin() + mymap.size() - 1; it != mymap.begin()+mid; it--){
+	for (it = mymap.begin() + mymap.size() - 1; it != mymap.begin() + mid; it--){
 		sibling.insert((*it).key, (*it).pid);
 		count++;
 	}
 	midKey = (*it).key;
-	for(int i = 0; i < count; i++){
+	for (int i = 0; i < count; i++){
 		mymap.pop_back();
 	}
 	mymap.pop_back();
 
-	return 0; 
+	return 0;
 }
 
 /*
@@ -337,21 +342,21 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
-{ 	
+{
 	//if node is empty
-	if(mymap.size() == 0){
+	if (mymap.size() == 0){
 		return RC_NO_SUCH_RECORD;
 	}
 	//once a key is found greater than the search key, return its pointer
-	for(int i = 0; i < buffer.size(); i++){
-		if(mymap[i].key > searchKey){
+	for (int i = 0; i < buffer.size(); i++){
+		if (mymap[i].key > searchKey){
 			pid = mymap[i].pid;
 			return 0;
 		}
 	}
 	//else the search key is greater than all keys, so return the rightmost poitner
 	pid = nextpage;
-	return 0; 
+	return 0;
 }
 
 /*
@@ -362,15 +367,15 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
-{ 
+{
 	insert(key, pid1);
 	nextpage = pid2;
-	return 0; 
+	return 0;
 }
 
 void BTNonLeafNode::printstats(){
-	for(int i = 0; i < mymap.size(); i++){
-		cout<< mymap[i].key << " " << mymap[i].pid << "\n";
+	for (int i = 0; i < mymap.size(); i++){
+		cout << mymap[i].key << " " << mymap[i].pid << "\n";
 	}
 	cout << "nextpage: " << nextpage << "\n";
 }
