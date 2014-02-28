@@ -236,7 +236,7 @@ RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
 	}
 
 	//set PageId
-	nextpage = buffer.getLast();
+	firstpage = buffer.getLast();
 	return ret;
 }
 
@@ -252,7 +252,7 @@ RC BTNonLeafNode::write(PageId pid, PageFile& pf)
 	for (int i = 0; i < mymap.size(); i++){
 		buffer.set(i, mymap[i]);
 	}
-	buffer.setLast(nextpage);
+	buffer.setLast(firstpage);
 	RC ret = pf.pf_write(pid, &buffer);
 	return ret;
 }
@@ -280,7 +280,6 @@ RC BTNonLeafNode::insert(int key, PageId pid)
 	if (mymap.size() == buffer.size()){
 		return RC_NODE_FULL;
 	}
-
 	//if you find a key that's greater than the entry key, insert the entry key right before
 	for (int i = 0; i < mymap.size(); i++){
 		if (mymap[i].key > key){
@@ -347,16 +346,22 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 	if (mymap.size() == 0){
 		return RC_NO_SUCH_RECORD;
 	}
+	if(mymap[0].key > searchKey){
+		pid = firstpage;
+		return 0;
+	}
 	//once a key is found greater than the search key, return its pointer
-	for (int i = 0; i < buffer.size(); i++){
+	for (int i = 1; i < mymap.size(); i++){
 		if (mymap[i].key > searchKey){
-			pid = mymap[i].pid;
+			pid = mymap[i-1].pid;
 			return 0;
 		}
 	}
-	//else the search key is greater than all keys, so return the rightmost poitner
-	pid = nextpage;
+
+	//if the key is the greatest, return the last key's pid
+	pid = mymap[mymap.size() -1].pid;
 	return 0;
+
 }
 
 /*
@@ -368,8 +373,8 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
  */
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
 {
-	insert(key, pid1);
-	nextpage = pid2;
+	insert(key, pid2);
+	firstpage = pid1;
 	return 0;
 }
 
@@ -377,5 +382,5 @@ void BTNonLeafNode::printstats(){
 	for (int i = 0; i < mymap.size(); i++){
 		cout << mymap[i].key << " " << mymap[i].pid << "\n";
 	}
-	cout << "nextpage: " << nextpage << "\n";
+	cout << "firstpage: " << firstpage << "\n";
 }

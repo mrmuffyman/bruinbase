@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#include "keyRec.h"
 template <class T>
 class BTbuff
 {

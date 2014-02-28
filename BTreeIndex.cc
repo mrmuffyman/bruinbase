@@ -10,6 +10,8 @@
 #include "BTreeIndex.h"
 #include "BTreeNode.h"
 
+#define NONE -999
+
 using namespace std;
 
 /*
@@ -18,6 +20,7 @@ using namespace std;
 BTreeIndex::BTreeIndex()
 {
     rootPid = -1;
+    treeHeight = 0;
 }
 
 /*
@@ -29,7 +32,8 @@ BTreeIndex::BTreeIndex()
  */
 RC BTreeIndex::open(const string& indexname, char mode)
 {
-    return 0;
+	RC ret = pf.pf_open(indexname, mode);
+    return ret;
 }
 
 /*
@@ -38,7 +42,8 @@ RC BTreeIndex::open(const string& indexname, char mode)
  */
 RC BTreeIndex::close()
 {
-    return 0;
+	RC ret = pf.pf_close();
+    return ret;
 }
 
 /*
@@ -49,9 +54,78 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
-    return 0;
-}
+	int splitkey;
+	PageId splitPid;
 
+	if(rootPid == -1)
+	{
+		treeHeight = 1;
+		rootPid = pf.endPid()+1;
+		BTNonLeafNode* root = new BTNonLeafNode();
+		root->initializeRoot(NONE, key, pf.endPid()+2); 
+		root->write(pf.endPid()+1, pf);
+		insertHelper(key, rid, pf.endPid()+1, 0, splitkey, splitPid);
+	}
+	else
+	{
+		//if require new root, make one
+		RC ret = insertHelper(key, rid, rootPid, 0, splitkey, splitPid);
+    	return ret;
+    }
+}
+// does inserthelper create a new thing?
+
+RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height, int& ifsplit, PageId& splitPid){
+	//base case: leaf
+	//else: recurse through nonleafs
+
+	RC stillGood; //if any of these calls fail then it'll return the error code
+
+	if(height == treeHeight)
+	{
+
+		BTLeafNode* curr = new BTLeafNode();
+		if(stillGood = curr->read(pid,pf))
+		{		
+			return stillGood;
+		}
+		if(stillGood = curr->insert(key, rid))
+		{
+			//insert failed because node was full
+			int splitKey;
+			BTLeafNode* split = new BTLeafNode();
+			curr->insertAndSplit(key,rid, *split, splitKey);
+			split->setNextNodePtr(curr->getNextNodePtr());
+			split->write(pf.endPid()+1, pf);
+			curr->setNextNodePtr(pf.endPid());
+			ifsplit = splitKey;
+			splitPid = pf.endPid();
+		}
+		if(stillGood = curr->write(pid, pf))
+		{
+			return stillGood;
+		}
+		//all calls passed, returns 0
+		return stillGood;
+	}
+	else
+	{
+		BTNonLeafNode* curr = new BTNonLeafNode();
+		PageId t_pid;
+		if(stillGood = curr->read(pid,pf))
+			return stillGood;
+		if(stillGood = curr->locateChildPtr(key, t_pid))
+			return stillGood;
+		int splitkey = 0;
+		PageId splitPid; 
+		insertHelper(key, rid, t_pid, height+1, splitkey, splitPid);
+		if(splitkey != 0)
+		{
+			curr->insert(splitkey, splitPid);
+		}
+	}
+
+}
 /*
  * Find the leaf-node index entry whose key value is larger than or 
  * equal to searchKey, and output the location of the entry in IndexCursor.
