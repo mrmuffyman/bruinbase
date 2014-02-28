@@ -14,7 +14,10 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
 {
 	//read into char buffer
 	RC ret = pf.pf_read(pid, &buffer);
-
+	if (ret)
+	{ //return error code
+		return ret;
+	}
 	//populate vector with elements in buffer
 	size_t index = sizeof(keyRec);
 	//keyRec* iter = buffer; 

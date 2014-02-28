@@ -10,10 +10,22 @@
 #include "Bruinbase.h"
 //#include "SqlEngine.h"
 #include "BTreeNode.h"
+#include "BTreeIndex.h"
 #include <iostream>
 
 int main()
 {
+	auto BT = new BTreeIndex();
+	BT->open("zubat.isabat", 'w');
+	BT->insert(1,RecordId(0,0));
+	BT->insert(2, RecordId(0, 0));
+	BT->insert(3, RecordId(0, 0));
+	BT->insert(4, RecordId(0, 0));
+	auto n = new BTNonLeafNode();
+	n->read(1, BT->pf);
+	auto m = new BTLeafNode();
+	m->read(2, BT->pf);
+	BT->close();
 /*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);

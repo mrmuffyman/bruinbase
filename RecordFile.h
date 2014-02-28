@@ -17,10 +17,22 @@
  * The data structure for pointing to a particular record in a RecordFile.
  * A record id consists of pid (PageId) and sid (the slot number in the page)
  */
-typedef struct {
-  PageId  pid;  // page number. the first page is 0
-  int     sid;  // slot number. the first slot is 0
-} RecordId;
+//typedef struct {
+//	PageId  pid;  // page number. the first page is 0
+//	int     sid;  // slot number. the first slot is 0
+//} RecordId;
+struct RecordId
+{
+	RecordId()
+	{}
+	RecordId(PageId p1, int s1)
+	{
+		pid = p1;
+		sid = s1;
+	}
+	PageId  pid;  // page number. the first page is 0
+	int     sid;  // slot number. the first slot is 0
+};
 
 //
 // helper functions for RecordId
