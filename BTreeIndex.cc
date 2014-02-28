@@ -20,7 +20,6 @@ using namespace std;
 BTreeIndex::BTreeIndex()
 {
     rootPid = -1;
-    treeHeight = 0;
 }
 
 /*
@@ -54,7 +53,7 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
-	int splitkey;
+	int midKey = 0;
 	PageId splitPid;
 
 	if(rootPid == -1)
@@ -64,12 +63,19 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		BTNonLeafNode* root = new BTNonLeafNode();
 		root->initializeRoot(NONE, key, pf.endPid()+2); 
 		root->write(pf.endPid()+1, pf);
-		insertHelper(key, rid, pf.endPid()+1, 0, splitkey, splitPid);
+		RC ret = insertHelper(key, rid, pf.endPid()+1, 0, splitkey, splitPid);
+		return ret;
 	}
 	else
 	{
 		//if require new root, make one
-		RC ret = insertHelper(key, rid, rootPid, 0, splitkey, splitPid);
+		int midKey = 0;
+		RC ret = insertHelper(key, rid, rootPid, 0, midKey, splitPid);
+		if(midKey != 0){
+			BTNonLeafNode* newRoot = new BTNonLeafNode();
+			newRoot->initializeRoot(rootPid, midKey, splitPid);
+			newRoot->write(pf.endPid()+1, pf);
+		}
     	return ret;
     }
 }
@@ -121,7 +127,17 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 		insertHelper(key, rid, t_pid, height+1, splitkey, splitPid);
 		if(splitkey != 0)
 		{
-			curr->insert(splitkey, splitPid);
+			//try to insert else push up new splitkey (Non Leaf Node Overflow)
+			if(stillGood = 	curr->insert(splitkey, splitPid))
+			{
+				int midKey;
+				BTNonLeafNode* split = new BTNonLeafNode();
+				curr->insertAndSplit(splitkey,splitPid, *split, midKey);
+				split->write(pf.endPid()+1, pf);
+				ifsplit = midKey;
+				splitPid = pf.endPid();
+				return stillGood;
+			}	
 		}
 	}
 
