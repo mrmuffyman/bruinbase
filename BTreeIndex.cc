@@ -136,21 +136,22 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 	{	// couldn't follow pid to child node, return error code
 		return childPtrErr;
 	}
-	int splitkey = 0;
-	PageId tempSplitPid;
-	insertHelper(key, rid, t_pid, height + 1, splitkey, tempSplitPid);
+	int propagatedKey = 0;
+	PageId propagatedPid;
+	insertHelper(key, rid, t_pid, height + 1, propagatedKey, propagatedPid);
 	if (splitkey != 0)
 	{
 		//try to insert else push up new splitkey (Non Leaf Node Overflow)
-		int nodeFull = containerNode->insert(splitkey, tempSplitPid);
+		int nodeFull = containerNode->insert(propagatedKey, propagatedPid);
 		if (nodeFull )
 		{
 			int midKey;
 			BTNonLeafNode* split = new BTNonLeafNode();
-			containerNode->insertAndSplit(splitkey, tempSplitPid, *split, midKey);
+			containerNode->insertAndSplit(propagatedKey, propagatedPid, *split, midKey);
+			containerNode->write(pid, pf);
 			split->write(pf.endPid() + 1, pf);
 			ifsplit = midKey;
-			tempSplitPid = pf.endPid();
+			splitPid = pf.endPid();
 		}
 	}
 	return 0;
