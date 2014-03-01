@@ -93,7 +93,7 @@ public:
 
 private:
 	RC insertHelper(int key, const RecordId& rid, PageId pid, int height, int& ifsplit, PageId& splitPid);
-
+  RC locateHelper(int searchKey, IndexCursor& cursor, PageId pid, int height);
 	
 
 	PageId   rootPid;    /// the PageId of the root node

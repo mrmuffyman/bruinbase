@@ -15,7 +15,7 @@
 
 int main()
 {
-	auto BT = new BTreeIndex();
+/*	auto BT = new BTreeIndex();
 	BT->open("zubat.isabat", 'w');
 	BT->insert(1,RecordId(0,0));
 	BT->insert(2, RecordId(0, 0));
@@ -25,7 +25,7 @@ int main()
 	n->read(1, BT->pf);
 	auto m = new BTLeafNode();
 	m->read(2, BT->pf);
-	BT->close();
+	BT->close();*/
 /*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);
@@ -47,7 +47,7 @@ int main()
 
 //Some LeafNode Testing
 	BTLeafNode* node = new BTLeafNode();
-	RecordId d = {0,0};
+	RecordId d = RecordId(0,0);
 	node->insert(1,d);
 	node->setNextNodePtr(1);
 								//fname      mode

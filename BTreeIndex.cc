@@ -139,7 +139,7 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 	int propagatedKey = 0;
 	PageId propagatedPid;
 	insertHelper(key, rid, t_pid, height + 1, propagatedKey, propagatedPid);
-	if (splitkey != 0)
+	if (propagatedKey != 0)
 	{
 		//try to insert else push up new splitkey (Non Leaf Node Overflow)
 		int nodeFull = containerNode->insert(propagatedKey, propagatedPid);
@@ -177,6 +177,39 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
  */
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
+	locateHelper(searchKey, cursor, rootPid, 0);
+	return 0;
+}
+
+RC BTreeIndex::locateHelper(int searchKey, IndexCursor& cursor, PageId pid, int height)
+{
+	if(height == treeHeight)
+	{
+		BTLeafNode* container = new BTLeafNode();
+		container->read(pid, pf);
+		int eid;
+		RC notFound;
+		located = container->locate(searchKey, eid);
+		if(notFound){
+			if(container.getNextNodePtr() == 0){	//rightmost leaf node
+				return RC_NO_SUCH_RECORD;
+			}
+			//call on right adjacent leaf node
+			locateHelper(searchKey, cursor, container.getNextNodePtr(), height);
+		}
+		else{
+			cursor = {pid, eid};
+			return 0;
+		}
+	}
+	else
+	{
+		BTLeafNode* container = new BTNonLeafNode();
+		container->read(pid, pf);
+		PageId nextPid;
+		container->locateChildPtr(searchKey, nextPid);
+		locateHelper(searchKey, cursor, nextPid, height+1);
+	}
 	return 0;
 }
 
