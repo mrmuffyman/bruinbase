@@ -60,12 +60,12 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 	{
 		treeHeight = 1;
 		int endpid = pf.endPid();
-		rootPid = endpid + 1; //allocate new pagefile for root
+		rootPid = endpid; //allocate new pagefile for root
 		BTNonLeafNode* root = new BTNonLeafNode();
-		int newendpid = endpid + 2;
+		int newendpid = endpid+1;
 		root->initializeRoot(NONE, key, newendpid);
 		root->write(rootPid, pf); // increments endPid() return
-		RC ret = insertHelper(key, rid, newendpid, 0, midKey, splitPid);
+		RC ret = insertHelper(key, rid, rootPid, 0, midKey, splitPid);
 		return ret;
 	}
 	// tree exists
@@ -99,8 +99,10 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 		int readerr = containerNode->read(pid, pf);
 		if (readerr)
 		{
+			containerNode->insert(key, rid);
+			containerNode->write(pid, pf);
 			// Read errored out
-			return readerr;
+			return 0;
 		}
 		int insertstatus = containerNode->insert(key, rid);
 		if (insertstatus)
@@ -189,22 +191,23 @@ RC BTreeIndex::locateHelper(int searchKey, IndexCursor& cursor, PageId pid, int 
 		container->read(pid, pf);
 		int eid;
 		RC notFound;
-		located = container->locate(searchKey, eid);
+		notFound = container->locate(searchKey, eid);
 		if(notFound){
-			if(container.getNextNodePtr() == 0){	//rightmost leaf node
+			if(container->getNextNodePtr() == 0){	//rightmost leaf node
 				return RC_NO_SUCH_RECORD;
 			}
 			//call on right adjacent leaf node
-			locateHelper(searchKey, cursor, container.getNextNodePtr(), height);
+			locateHelper(searchKey, cursor, container->getNextNodePtr(), height);
 		}
 		else{
-			cursor = {pid, eid};
+			cursor.pid = pid;
+			cursor.eid = eid;
 			return 0;
 		}
 	}
 	else
 	{
-		BTLeafNode* container = new BTNonLeafNode();
+		BTNonLeafNode* container = new BTNonLeafNode();
 		container->read(pid, pf);
 		PageId nextPid;
 		container->locateChildPtr(searchKey, nextPid);

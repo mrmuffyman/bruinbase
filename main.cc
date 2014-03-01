@@ -15,17 +15,19 @@
 
 int main()
 {
-/*	auto BT = new BTreeIndex();
+	BTreeIndex* BT = new BTreeIndex();
 	BT->open("zubat.isabat", 'w');
 	BT->insert(1,RecordId(0,0));
 	BT->insert(2, RecordId(0, 0));
 	BT->insert(3, RecordId(0, 0));
 	BT->insert(4, RecordId(0, 0));
-	auto n = new BTNonLeafNode();
-	n->read(1, BT->pf);
-	auto m = new BTLeafNode();
-	m->read(2, BT->pf);
-	BT->close();*/
+	BTNonLeafNode* n = new BTNonLeafNode();
+	n->read(0, BT->pf);
+	BTLeafNode* m = new BTLeafNode();
+	m->read(1, BT->pf);
+	m->printstats();
+	BT->close();
+	remove("zubat.isabat");
 /*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);
@@ -46,7 +48,7 @@ int main()
  // SqlEngine::run(stdin);
 
 //Some LeafNode Testing
-	BTLeafNode* node = new BTLeafNode();
+/*	BTLeafNode* node = new BTLeafNode();
 	RecordId d = RecordId(0,0);
 	node->insert(1,d);
 	node->setNextNodePtr(1);
@@ -77,5 +79,5 @@ int main()
 	nade->insertAndSplit(3, 0, *gre, midkey);
 	nade-> printstats();
 	gre->printstats();
-    return 0;
+    return 0;*/
 }
