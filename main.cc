@@ -12,6 +12,7 @@
 #include "BTreeNode.h"
 #include "BTreeIndex.h"
 #include <iostream>
+#include <assert.h>
 
 int main()
 {
@@ -26,6 +27,16 @@ int main()
 	BTLeafNode* m = new BTLeafNode();
 	m->read(1, BT->pf);
 	m->printstats();
+	IndexCursor curs;
+	BT->locate(3, curs);
+	std::cout << curs.pid << " " << curs.eid << std::endl;
+	assert(curs.pid == 1);
+	assert(curs.eid == 2);
+	int key;
+	RecordId rid;
+	BT->readForward(curs, key, rid);
+	std::cout << curs.pid << " " <<curs.eid << std::endl;
+	std::cout << key << " " << rid.pid << " " <<rid.sid << std::endl;
 	BT->close();
 	remove("zubat.isabat");
 /*	auto teemo = new BTbuff();
