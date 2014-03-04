@@ -58,13 +58,17 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 
 	if (rootPid == -1)
 	{
-		treeHeight = 1;
+		treeHeight = 0; 
 		int endpid = pf.endPid();
 		rootPid = endpid; //allocate new pagefile for root
-		BTNonLeafNode* root = new BTNonLeafNode();
-		int newendpid = endpid+1;
-		root->initializeRoot(NONE, key, newendpid);
+		BTLeafNode* root = new BTLeafNode();
+/*		int leftpid = endpid+1;
+		int rightpid = endpid+2;
+		root->initializeRoot(leftpid, key, rightpid);*/
+
+
 		root->write(rootPid, pf); // increments endPid() return
+		//this is ugly but I'm just incrementing endPid to be consistent for future inserts
 		RC ret = insertHelper(key, rid, rootPid, 0, midKey, splitPid);
 		return ret;
 	}
@@ -74,8 +78,8 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 	if (midKey != 0){
 		BTNonLeafNode* newRoot = new BTNonLeafNode();
 		newRoot->initializeRoot(rootPid, midKey, splitPid);
-		newRoot->write(pf.endPid() + 1, pf);
-		rootPid = pf.endPid();
+		newRoot->write(pf.endPid(), pf);
+		rootPid = pf.endPid()-1;
 		treeHeight++;
 	}
 	return ret;
@@ -112,10 +116,10 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 			BTLeafNode* split = new BTLeafNode();
 			containerNode->insertAndSplit(key, rid, *split, splitKey);
 			split->setNextNodePtr(containerNode->getNextNodePtr());
-			split->write(pf.endPid() + 1, pf);
-			containerNode->setNextNodePtr(pf.endPid());
+			split->write(pf.endPid(), pf);
+			containerNode->setNextNodePtr(pf.endPid()-1);
 			ifsplit = splitKey;
-			splitPid = pf.endPid();
+			splitPid = pf.endPid()-1;
 		}
 		int writerr = containerNode->write(pid, pf);
 		if (writerr)
@@ -151,10 +155,12 @@ RC BTreeIndex::insertHelper(int key, const RecordId& rid, PageId pid, int height
 			BTNonLeafNode* split = new BTNonLeafNode();
 			containerNode->insertAndSplit(propagatedKey, propagatedPid, *split, midKey);
 			containerNode->write(pid, pf);
-			split->write(pf.endPid() + 1, pf);
+			split->write(pf.endPid(), pf);
 			ifsplit = midKey;
-			splitPid = pf.endPid();
+			splitPid = pf.endPid()-1;
+			return 0;
 		}
+		containerNode->write(pid,pf);
 	}
 	return 0;
 }

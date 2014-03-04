@@ -14,24 +14,43 @@
 #include <iostream>
 #include <assert.h>
 
+using namespace std;
+
 int main()
 {
+	string input = "";
+	string type = "";
 	BTreeIndex* BT = new BTreeIndex();
 	BT->open("zubat.isabat", 'w');
-	BT->insert(1,RecordId(0,0));
-	BT->insert(2, RecordId(0, 0));
-	BT->insert(3, RecordId(0, 0));
-	BT->insert(4, RecordId(0, 0));
-	BTNonLeafNode* n = new BTNonLeafNode();
-	n->read(0, BT->pf);
-	BTLeafNode* m = new BTLeafNode();
-	m->read(1, BT->pf);
-	m->printstats();
+	for(int i = 1; i < 10001; i++){
+		BT->insert(i,RecordId(0,0));
+	}
+	cout << "Rootpid: " << BT->getRootPid() << endl;
+	while(atoi(input.c_str()) != -1){
+		cout << "Enter a node pid:\n>";
+ 		getline(cin, input);
+ 		cout << "Enter the type (\"leaf or nonleaf\"):\n>";
+ 		getline(cin,type);
+ 		if(type == "leaf"){
+			BTLeafNode* n = new BTLeafNode();
+			n->read(atoi(input.c_str()), BT->pf);
+			n->printstats();
+		}
+		else if(type == "nonleaf"){
+			BTNonLeafNode* n = new BTNonLeafNode();
+			n->read(atoi(input.c_str()), BT->pf);
+			n->printstats();
+		}
+	}
+/*	BTLeafNode* left = new BTLeafNode();
+	left->read(1, BT->pf);
+	BTLeafNode* right = new BTLeafNode();
+	right->read(2,BT->pf);
+	left->printstats();
+	right->printstats();*/
 	IndexCursor curs;
-	BT->locate(3, curs);
+	BT->locate(4602, curs);
 	std::cout << curs.pid << " " << curs.eid << std::endl;
-	assert(curs.pid == 1);
-	assert(curs.eid == 2);
 	int key;
 	RecordId rid;
 	BT->readForward(curs, key, rid);

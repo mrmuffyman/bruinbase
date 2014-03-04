@@ -382,8 +382,8 @@ RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
 }
 
 void BTNonLeafNode::printstats(){
+	cout << "firstpage: " << firstpage << "\n";
 	for (int i = 0; i < mymap.size(); i++){
 		cout << mymap[i].key << " " << mymap[i].pid << "\n";
 	}
-	cout << "firstpage: " << firstpage << "\n";
 }

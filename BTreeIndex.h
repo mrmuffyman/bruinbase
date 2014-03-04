@@ -91,6 +91,9 @@ public:
 	RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
 	PageFile pf;         /// the PageFile used to store the actual b+tree in disk
 
+  int getRootPid(){
+    return rootPid;
+  }
 private:
 	RC insertHelper(int key, const RecordId& rid, PageId pid, int height, int& ifsplit, PageId& splitPid);
   RC locateHelper(int searchKey, IndexCursor& cursor, PageId pid, int height);
