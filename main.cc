@@ -22,9 +22,9 @@ int main()
 	string type = "";
 	BTreeIndex* BT = new BTreeIndex();
 	BT->open("zubat.isabat", 'w');
-	for(int i = 1; i < 10001; i++){
+	/*for(int i = 1; i < 10001; i++){
 		BT->insert(i,RecordId(0,0));
-	}
+	}*/
 	cout << "Rootpid: " << BT->getRootPid() << endl;
 	while(atoi(input.c_str()) != -1){
 		cout << "Enter a node pid:\n>";
@@ -57,7 +57,6 @@ int main()
 	std::cout << curs.pid << " " <<curs.eid << std::endl;
 	std::cout << key << " " << rid.pid << " " <<rid.sid << std::endl;
 	BT->close();
-	remove("zubat.isabat");
 /*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);

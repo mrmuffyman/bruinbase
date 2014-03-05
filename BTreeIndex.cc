@@ -31,7 +31,17 @@ BTreeIndex::BTreeIndex()
  */
 RC BTreeIndex::open(const string& indexname, char mode)
 {
+	BTLeafNode* check = new BTLeafNode();
 	RC ret = pf.pf_open(indexname, mode);
+	if(check->read(0,pf) == 0){
+		int key;
+		RecordId rid;
+		check->readEntry(0, key, rid);
+		if(key != 0){
+				treeHeight = rid.pid;
+				rootPid = rid.sid;
+			}
+	}
 	return ret;
 }
 
@@ -41,6 +51,11 @@ RC BTreeIndex::open(const string& indexname, char mode)
  */
 RC BTreeIndex::close()
 {
+	BTLeafNode* temp = new BTLeafNode();
+	RecordId in = RecordId(treeHeight, rootPid);
+	temp->insert(1, in); 
+	temp->write(0, pf);
+	temp->printstats();
 	RC ret = pf.pf_close();
 	return ret;
 }
@@ -59,7 +74,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 	if (rootPid == -1)
 	{
 		treeHeight = 0; 
-		int endpid = pf.endPid();
+		int endpid = pf.endPid()+1;
 		rootPid = endpid; //allocate new pagefile for root
 		BTLeafNode* root = new BTLeafNode();
 /*		int leftpid = endpid+1;
