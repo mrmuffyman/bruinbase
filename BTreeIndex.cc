@@ -52,7 +52,9 @@ RC BTreeIndex::open(const string& indexname, char mode)
 RC BTreeIndex::close()
 {
 	BTLeafNode* temp = new BTLeafNode();
-	RecordId in = RecordId(treeHeight, rootPid);
+	RecordId in;
+	in.pid = treeHeight;
+	in.sid = rootPid;
 	temp->insert(1, in); 
 	temp->write(0, pf);
 	temp->printstats();

@@ -1,0 +1,9 @@
+Names: Kevin Lin, Trevor Anderson
+Project 2C
+
+On initialization, a single leaf node is created and treated as the root.
+Once the node splits, a root node is created with pointers to the split node.
+Node pid starts at 1.
+Pid = 0 is reserved for storing rootPid and treeHeight.
+
+InsertHelper and locateHelper are helper functions that take extra parameters to implement recursion.

@@ -8,7 +8,7 @@
  */
  
 #include "Bruinbase.h"
-//#include "SqlEngine.h"
+#include "SqlEngine.h"
 #include "BTreeNode.h"
 #include "BTreeIndex.h"
 #include <iostream>
@@ -18,13 +18,16 @@ using namespace std;
 
 int main()
 {
-	string input = "";
+/*	string input = "";
 	string type = "";
 	BTreeIndex* BT = new BTreeIndex();
 	BT->open("zubat.isabat", 'w');
-	/*for(int i = 1; i < 10001; i++){
-		BT->insert(i,RecordId(0,0));
-	}*/
+	for(int i = 100; i > 0; i--){
+		RecordId d;
+		d.pid = 0;
+		d.sid = 0;
+		BT->insert(i,d);
+	}
 	cout << "Rootpid: " << BT->getRootPid() << endl;
 	while(atoi(input.c_str()) != -1){
 		cout << "Enter a node pid:\n>";
@@ -41,22 +44,22 @@ int main()
 			n->read(atoi(input.c_str()), BT->pf);
 			n->printstats();
 		}
-	}
+	}*/
 /*	BTLeafNode* left = new BTLeafNode();
 	left->read(1, BT->pf);
 	BTLeafNode* right = new BTLeafNode();
 	right->read(2,BT->pf);
 	left->printstats();
 	right->printstats();*/
-	IndexCursor curs;
+/*	IndexCursor curs;
 	BT->locate(4602, curs);
 	std::cout << curs.pid << " " << curs.eid << std::endl;
 	int key;
 	RecordId rid;
 	BT->readForward(curs, key, rid);
 	std::cout << curs.pid << " " <<curs.eid << std::endl;
-	std::cout << key << " " << rid.pid << " " <<rid.sid << std::endl;
-	BT->close();
+	std::cout << key <<  " << rid.pid << " " <<rid.sid << std::endl;
+	BT->close();*/
 /*	auto teemo = new BTbuff();
 	auto q = teemo->getLast();
 	teemo->setLast(9999);
@@ -74,7 +77,7 @@ int main()
 	auto e = teemo->get(0);
 	auto f = teemo->get(9);*/
   // run the SQL engine taking user commands from standard input (console).
- // SqlEngine::run(stdin);
+   SqlEngine::run(stdin);
 
 //Some LeafNode Testing
 /*	BTLeafNode* node = new BTLeafNode();

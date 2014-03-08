@@ -23,13 +23,6 @@
 //} RecordId;
 struct RecordId
 {
-	RecordId()
-	{}
-	RecordId(PageId p1, int s1)
-	{
-		pid = p1;
-		sid = s1;
-	}
 	PageId  pid;  // page number. the first page is 0
 	int     sid;  // slot number. the first slot is 0
 };
