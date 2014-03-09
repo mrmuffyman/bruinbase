@@ -249,15 +249,15 @@ RC BTreeIndex::locateHelper(int searchKey, IndexCursor& cursor, PageId pid, int 
  */
 RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 {
+	if(cursor.pid == 0){
+			return RC_NO_SUCH_RECORD;
+	}
 	BTLeafNode* container = new BTLeafNode();
 	container->read(cursor.pid, pf);
 	container->readEntry(cursor.eid, key, rid);
 	if(cursor.eid == container->getKeyCount() - 1){
 		cursor.eid = 0; 
 		cursor.pid = container->getNextNodePtr();
-		if(cursor.pid == 0){
-			return RC_NO_SUCH_RECORD;
-		}
 	}
 	else
 		cursor.eid++;

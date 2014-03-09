@@ -64,7 +64,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   }
   
   int minValue = 0; //minValue is where you start searching
-  int absValue = -1; //value is where you MUST search because of an existing equals condition. For example key = 10 and key > 5 means you only have to do one search at 10
+  int absValue = -1; //value is where you MUST search because of an existing equals condition. For example key > 8 and key > 5 means you only have to do one search at 8
   if(hasIndex)
   {
     //find out the minimum value needed
@@ -101,8 +101,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
         }
     }
   }
+  if(attr == 4){
+    usesIndex = true;
+  }
   //search with index
-  if(usesIndex)
+  if(hasIndex && usesIndex)
   {
     count = 0;
     if(absValue != -1)
@@ -124,11 +127,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
                 //check critical key conditions (everything but Not Equals)
                 switch (cond[i].comp){
                     case SelCond::EQ:
-                        if (diff != 0) done = true;
+                        done = true;
                         break;
-                    case SelCond::GT: //technically this should never happen
+                  /*  case SelCond::GT: //technically this should never happen
                         if (diff <= 0) done = true;
-                        break;
+                        break;*/
                     case SelCond::LT: 
                         if (diff >= 0) done = true;
                         break;
